@@ -2,7 +2,7 @@
 a world of warcraft addon for gathering information about your guildies.
 
 ## Installation
-Install in a folder called `Keeper_of_Statistcs` in your `Interface/Addons` folder.
+Install in a folder called `Keeper_of_Statistics` in your `Interface/Addons` folder.
 
 ## Usage
 When in a party, close to your friends, write `/KOS` to index your friends.
