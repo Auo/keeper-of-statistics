@@ -1,0 +1,8 @@
+## Interface: 70100
+## Title: Keeper of Statistics
+## Author: Shinri, Vashj EU
+## Notes: Gathering statistics for other players to show in guildchat
+## SavedVariables: KOS
+
+Keeper_of_Statistics.lua
+
