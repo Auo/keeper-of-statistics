@@ -1,5 +1,5 @@
 # keeper-of-statistics
-a world of warcraft addon for gathering information about your guildies.
+A World of Warcraft addon for gathering information about your guildies / people in your party or raid.
 
 ## Installation
 Install in a folder called `Keeper_of_Statistics` in your `Interface/Addons` folder.
