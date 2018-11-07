@@ -2,9 +2,8 @@ local frame = CreateFrame("frame");
 
 local EVENT_INSPECT_ACHIEVEMENT_READY, EVENT_ADDON_LOADED, EVENT_CHAT_MSG_GUILD = "INSPECT_ACHIEVEMENT_READY", "ADDON_LOADED", "CHAT_MSG_GUILD";
 
---Use this if you're having some sort of issue
---Before using, is your
---This will spam a lot and you should probably not be in a party while using this
+--Use this if you're having some sort of issue and you want to debug it
+--This will spam a lot
 local debugMode = false;
 
 local unitsToCheck = {};
@@ -40,7 +39,7 @@ function PlayerStatistic:new()
 end
 
 local function addCoinText(text)
-    text = string.gsub(text, "(%b||)(t)","")
+    text = string.gsub(text, "(%b||)(t)", "")
 
     local coins = {" c"," s"," g"};
     local s = strrev(text);
@@ -125,13 +124,14 @@ local function createNewPlayerStatistics(unitid)
     end
     --tell that we are ready for the next unitid
     updating = false;
-    --update the current player
+    --update the current player, move to next unit
     currentUnitChecked = currentUnitChecked + 1;
     --ClearAchievementComparisonUnit();
 end
 
 local function OnEvent(self, event, arg1, arg2, ...)
     if event == EVENT_INSPECT_ACHIEVEMENT_READY and runningCheck then
+	--debug
         if debugMode then
             print("inside event "  .. EVENT_INSPECT_ACHIEVEMENT_READY);
         end
@@ -141,23 +141,23 @@ local function OnEvent(self, event, arg1, arg2, ...)
         if KOS == nil then
             KOS = {};
             KOS.defaultStatistics = {
-                {114, "Falling deaths", false},
-                {321, "Total raid and dungeon deaths", false},
-                {60, "Total deaths", false},
-                {1197, "Total kills", false},
-                {753, "Average gold per day", true},
-                {328, "Total gold acquired", true},
-                {1456, "Fish and other things caught", false},
-                {1501, "Total deaths from other players", false},
-                {1148, "Gold spent on postage", true},
-                {319, "Duels won", false},
-                {1149, "Talent tree respecs", false},
-                {344, "Bandages used", false},
-                {342, "Epic items acquired", false},
-                {594, "Deaths by Hogger", false},
-                {349, "Flight paths taken", false},
-                {353, "Number of times hearthed", false},
-                {98, "Quests completed", false}
+                { 114, "Falling deaths", false },
+                { 321, "Total raid and dungeon deaths", false },
+                { 60, "Total deaths", false },
+                { 1197, "Total kills", false },
+                { 753, "Average gold per day", true },
+                { 328, "Total gold acquired", true },
+                { 1456, "Fish and other things caught", false },
+                { 1501, "Total deaths from other players", false },
+                { 1148, "Gold spent on postage", true },
+                { 319, "Duels won", false },
+                { 1149, "Talent tree respecs", false },
+                { 344, "Bandages used", false },
+                { 342, "Epic items acquired", false },
+                { 594, "Deaths by Hogger", false },
+                { 349, "Flight paths taken", false },
+                { 353, "Number of times hearthed", false },
+                { 98, "Quests completed", false }
             };
 
             KOS.Players = {};
@@ -237,6 +237,7 @@ local function OnUpdate(self, elapsed)
 end
 
 local function initCheck()
+    --debug
     if debugMode then
         print("starting OnUpdate");
     end
