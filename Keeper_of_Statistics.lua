@@ -21,10 +21,10 @@ function firstToUpper(str)
 end
 
 Player = {};
-function Player:new()
+function Player:new(name)
     local self = {};
     
-    self.name = "";
+    self.name = name;
     self.stats = {};
     return self;
 end
@@ -60,15 +60,6 @@ local function addCoinText(text)
     return strrev(output);
 end
 
-local function playerAlreadySaved(name)
-    for i = 1, #KOS.Players do
-        if (KOS.Players[i].name == name) then
-            return true;
-        end
-    end
-    return false;
-end
-
 local function getPlayerIndex(name)
     for i = 1, #KOS.Players do
         if (KOS.Players[i].name == name) then
@@ -79,33 +70,30 @@ local function getPlayerIndex(name)
     return -1;
 end
 
-
-
-local function createNewPlayerStatistics(unitid)
+local function createNewPlayerStatistics(unitId)
     if debugMode then
-        print("gathering information from player " .. GetUnitName(unitid));
+        print("gathering information from player " .. GetUnitName(unitId));
     end
     
-    local name = GetUnitName(unitid);
+    local name = GetUnitName(unitId);
     
-    if CheckInteractDistance(unitid, 4) then
+    if CheckInteractDistance(unitId, 4) then
         updating = true;
         if debugMode then
-            print(GetUnitName(unitid) .. " is in range of indexing and running now!");
+            print(GetUnitName(unitId) .. " is in range of indexing and running now!");
         end
                 
-        if (playerAlreadySaved(name)) then
+        if (getPlayerIndex(name) ~= -1) then
             table.remove(KOS.Players, getPlayerIndex(name));
         end
 
-        local player = Player:new();
-        player.name = name;
+        local player = Player:new(name);
         
         for i = 1, #KOS.defaultStatistics do
             local s = PlayerStatistic:new();
             s.name = KOS.defaultStatistics[i][2];
             
-            if(KOS.defaultStatistics[i][3]) then
+            if (KOS.defaultStatistics[i][3]) then
                 local temp = GetComparisonStatistic(KOS.defaultStatistics[i][1]);
                 s.value = addCoinText(temp);
             else
@@ -118,11 +106,11 @@ local function createNewPlayerStatistics(unitid)
     else
         if debugMode then
             --out of range for indexing
-            print(GetUnitName(unitid) .. " was not in range");
+            print(GetUnitName(unitId) .. " was not in range");
             
         end
     end
-    --tell that we are ready for the next unitid
+    --tell that we are ready for the next unitId
     updating = false;
     --update the current player, move to next unit
     currentUnitChecked = currentUnitChecked + 1;
@@ -186,7 +174,6 @@ local function OnEvent(self, event, arg1, arg2, ...)
             end
     end
 end
-
 
 local function OnUpdate(self, elapsed)
     total = total + elapsed;
@@ -273,7 +260,7 @@ function SlashCmdList.SENDER(msg, editbox)
            initCheck();
            
         elseif IsInRaid() then
-               local members = GetNumGroupMembers();
+           local members = GetNumGroupMembers();
                
            --player is in raid, doesn't need to be added
            for i = 1, members do
@@ -289,7 +276,6 @@ function SlashCmdList.SENDER(msg, editbox)
         else
            print("sorry, you need to be in a party or raid.");
         end
-    
     end
 end
 
