@@ -1,10 +1,84 @@
 local frame = CreateFrame("frame");
 
-local EVENT_INSPECT_ACHIEVEMENT_READY, EVENT_ADDON_LOADED, EVENT_CHAT_MSG_GUILD = "INSPECT_ACHIEVEMENT_READY", "ADDON_LOADED", "CHAT_MSG_GUILD";
-
 --Use this if you're having some sort of issue and you want to debug it
 --This will spam a lot
-local debugMode = false;
+local debugMode = true;
+
+-- filter Title == Dungeons & Raids ( Classic, The Burning Crusade, Wrathe of the Lich King, Cataclysm, Mists of Pandaria, Warlods of Draenor, Legion, Battle for Azeroth), Player vs. Player (Rated Arenas, Battlegrounds, World), Proving Grounds, Class Hall
+
+-- TODO: this needs to be filtered!
+local function getAllStatistics() 
+    local data = {};
+    local count = 0
+    for _, CategoryId in pairs(GetStatisticsCategoryList()) do
+    local Title, ParentCategoryId, Something
+    Title, ParentCategoryId, Something = GetCategoryInfo(CategoryId)
+    
+    -- if Title == CategoryTitle then
+        print(Title);
+    local i
+    local statisticCount = GetCategoryNumAchievements(CategoryId)
+    for i = 1, statisticCount do
+        local IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText
+        IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText = GetAchievementInfo(CategoryId, i)
+        
+        --if string.match(Name, "kills") == nil and string.match(Name, "defeat") == nil and string.match(Name, "Heroic") == nil and string.match(Name, "Normal") == nil and string.match(Name, "10 player") == nil and string.match(Name, "25 player") == nil  and string.match(Name, "defenses") == nil and string.match(Name,"redemptions") == nil and string.match(Name, "dungeon") == nil then
+            if string.match(Name, "gold") or string.match(Name, "Gold") then
+                table.insert(data, { IDNumber, Name, true });
+            else
+                table.insert(data, { IDNumber, Name, false });
+            end
+            
+            count = count + 1
+            
+        --end
+    end
+    end
+
+    if debugMode then
+        print("number of saved statistics: " .. #data);
+    end
+
+    return data;
+end
+
+local function initStore() 
+    if KOS == nil then
+        KOS = {};
+        KOS.defaultStatistics = getAllStatistics();
+        -- KOS.defaultStatistics = {
+        --     { 114, "Falling deaths", false },
+        --     { 321, "Total raid and dungeon deaths", false },
+        --     { 60, "Total deaths", false },
+        --     { 1197, "Total kills", false },
+        --     { 753, "Average gold per day", true },
+        --     { 328, "Total gold acquired", true },
+        --     { 1456, "Fish and other things caught", false },
+        --     { 1501, "Total deaths from other players", false },
+        --     { 1148, "Gold spent on postage", true },
+        --     { 319, "Duels won", false },
+        --     { 1149, "Talent tree respecs", false },
+        --     { 344, "Bandages used", false },
+        --     { 342, "Epic items acquired", false },
+        --     { 594, "Deaths by Hogger", false },
+        --     { 349, "Flight paths taken", false },
+        --     { 353, "Number of times hearthed", false },
+        --     { 98, "Quests completed", false }
+        -- };
+
+        KOS.Players = {};
+    end
+end
+
+local EVENT_INSPECT_ACHIEVEMENT_READY, EVENT_ADDON_LOADED, EVENT_CHAT_MSG, OUTPUT_CHAT_CHANNEL = "INSPECT_ACHIEVEMENT_READY", "ADDON_LOADED", "CHAT_MSG_GUILD", "GUILD";
+
+if debugMode then 
+    EVENT_CHAT_MSG = "CHAT_MSG_SAY";
+    OUTPUT_CHAT_CHANNEL = "SAY";
+
+    initStore();
+end
+
 
 local unitsToCheck = {};
 local updating = false;
@@ -107,7 +181,6 @@ local function createNewPlayerStatistics(unitId)
         if debugMode then
             --out of range for indexing
             print(GetUnitName(unitId) .. " was not in range");
-            
         end
     end
     --tell that we are ready for the next unitId
@@ -119,61 +192,41 @@ end
 
 local function OnEvent(self, event, arg1, arg2, ...)
     if event == EVENT_INSPECT_ACHIEVEMENT_READY and runningCheck then
-	--debug
+	    --debug
         if debugMode then
             print("inside event "  .. EVENT_INSPECT_ACHIEVEMENT_READY);
         end
 
         createNewPlayerStatistics(unitsToCheck[currentUnitChecked]);
     elseif event == EVENT_ADDON_LOADED then
-        if KOS == nil then
-            KOS = {};
-            KOS.defaultStatistics = {
-                { 114, "Falling deaths", false },
-                { 321, "Total raid and dungeon deaths", false },
-                { 60, "Total deaths", false },
-                { 1197, "Total kills", false },
-                { 753, "Average gold per day", true },
-                { 328, "Total gold acquired", true },
-                { 1456, "Fish and other things caught", false },
-                { 1501, "Total deaths from other players", false },
-                { 1148, "Gold spent on postage", true },
-                { 319, "Duels won", false },
-                { 1149, "Talent tree respecs", false },
-                { 344, "Bandages used", false },
-                { 342, "Epic items acquired", false },
-                { 594, "Deaths by Hogger", false },
-                { 349, "Flight paths taken", false },
-                { 353, "Number of times hearthed", false },
-                { 98, "Quests completed", false }
-            };
-
-            KOS.Players = {};
-        end
-    elseif event == EVENT_CHAT_MSG_GUILD then
+        initStore();
+    elseif event == EVENT_CHAT_MSG then
             if string.startsWith(arg1, "!stats") then
                 local p = strtrim(string.sub(arg1, strlen("!stats") + 1));
                 p = firstToUpper(p);
             
                 if #KOS.Players > 0 then
                     local ui = math.random(1, #KOS.Players);
-                    local us = math.random(1, #KOS.defaultStatistics);
-                    
+
                     if p ~=nil and strlen(p) > 2 then
                         ui = getPlayerIndex(p);
                     end
+
+                    local us = math.random(1, #KOS.Players[ui].stats);
                 
                     if ui == -1 then
-                        SendChatMessage("Sorry no player found with name: " .. p, "GUILD");
+                        SendChatMessage("Sorry no player found with name: " .. p, OUTPUT_CHAT_CHANNEL);
                     else
-                        SendChatMessage(KOS.Players[ui].name .. " " .. KOS.Players[ui].stats[us].name .." : ".. KOS.Players[ui].stats[us].value, "GUILD");
+                        SendChatMessage(KOS.Players[ui].name .. " " .. KOS.Players[ui].stats[us].name .." : ".. KOS.Players[ui].stats[us].value, OUTPUT_CHAT_CHANNEL);
                     end
                 else
-                    SendChatMessage("Sorry, no players have been indexed", "GUILD");
+                    SendChatMessage("Sorry, no players have been indexed", OUTPUT_CHAT_CHANNEL);
                 end
             end
     end
 end
+
+
 
 local function OnUpdate(self, elapsed)
     total = total + elapsed;
@@ -282,7 +335,7 @@ end
 frame:SetScript("OnEvent", OnEvent);
 frame:RegisterEvent(EVENT_INSPECT_ACHIEVEMENT_READY);
 frame:RegisterEvent(EVENT_ADDON_LOADED);
-frame:RegisterEvent(EVENT_CHAT_MSG_GUILD);
+frame:RegisterEvent(EVENT_CHAT_MSG);
 
 --if you want to add more statistics to track, 
 -- /script print(GetMouseFocus().id)
