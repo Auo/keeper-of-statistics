@@ -2,70 +2,72 @@ local frame = CreateFrame("frame");
 
 --Use this if you're having some sort of issue and you want to debug it
 --This will spam a lot
-local debugMode = true;
+local debugMode = false;
 
--- filter Title == Dungeons & Raids ( Classic, The Burning Crusade, Wrathe of the Lich King, Cataclysm, Mists of Pandaria, Warlods of Draenor, Legion, Battle for Azeroth), Player vs. Player (Rated Arenas, Battlegrounds, World), Proving Grounds, Class Hall
-
--- TODO: this needs to be filtered!
 local function getAllStatistics() 
+    local function contains(tab, val) 
+       for index, value in ipairs(tab) do
+          if value == val then
+             return true
+          end
+       end
+       
+       return false
+    end
+    
+    local unAllowedCategories = {
+        "Dungeons & Raids",
+        "Classic",
+        "The Burning Crusade",
+        "Wrath of the Lich King",
+        "Cataclysm",
+        "Mists of Pandaria",
+        "Warlords of Draenor",
+        "Legion",
+        "Battle for Azeroth",
+        "Player vs. Player",
+        "Rated Arenas",
+        "Battlegrounds",
+        "World",
+        "Proving Grounds",
+        "Class Hall"
+    };
+    
     local data = {};
     local count = 0
     for _, CategoryId in pairs(GetStatisticsCategoryList()) do
-    local Title, ParentCategoryId, Something
-    Title, ParentCategoryId, Something = GetCategoryInfo(CategoryId)
-    
-    -- if Title == CategoryTitle then
-        print(Title);
-    local i
-    local statisticCount = GetCategoryNumAchievements(CategoryId)
-    for i = 1, statisticCount do
-        local IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText
-        IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText = GetAchievementInfo(CategoryId, i)
-        
-        --if string.match(Name, "kills") == nil and string.match(Name, "defeat") == nil and string.match(Name, "Heroic") == nil and string.match(Name, "Normal") == nil and string.match(Name, "10 player") == nil and string.match(Name, "25 player") == nil  and string.match(Name, "defenses") == nil and string.match(Name,"redemptions") == nil and string.match(Name, "dungeon") == nil then
-            if string.match(Name, "gold") or string.match(Name, "Gold") then
-                table.insert(data, { IDNumber, Name, true });
-            else
-                table.insert(data, { IDNumber, Name, false });
-            end
-            
-            count = count + 1
-            
-        --end
-    end
+       local Title, ParentCategoryId = GetCategoryInfo(CategoryId)
+       
+       if  contains(unAllowedCategories, Title) == false then
+          --print(Title);
+          for i = 1, GetCategoryNumAchievements(CategoryId) do
+             local IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText
+             IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText = GetAchievementInfo(CategoryId, i)
+             
+             local isGold = false;
+             
+             if string.match(Name, "gold") or string.match(Name, "Gold") then
+                isGold = true;
+             end
+             
+             table.insert(data, { IDNumber, Name, isGold });
+             
+             count = count + 1
+          end
+       end
     end
 
     if debugMode then
         print("number of saved statistics: " .. #data);
-    end
+     end
 
     return data;
-end
+ end
 
 local function initStore() 
     if KOS == nil then
         KOS = {};
         KOS.defaultStatistics = getAllStatistics();
-        -- KOS.defaultStatistics = {
-        --     { 114, "Falling deaths", false },
-        --     { 321, "Total raid and dungeon deaths", false },
-        --     { 60, "Total deaths", false },
-        --     { 1197, "Total kills", false },
-        --     { 753, "Average gold per day", true },
-        --     { 328, "Total gold acquired", true },
-        --     { 1456, "Fish and other things caught", false },
-        --     { 1501, "Total deaths from other players", false },
-        --     { 1148, "Gold spent on postage", true },
-        --     { 319, "Duels won", false },
-        --     { 1149, "Talent tree respecs", false },
-        --     { 344, "Bandages used", false },
-        --     { 342, "Epic items acquired", false },
-        --     { 594, "Deaths by Hogger", false },
-        --     { 349, "Flight paths taken", false },
-        --     { 353, "Number of times hearthed", false },
-        --     { 98, "Quests completed", false }
-        -- };
-
         KOS.Players = {};
     end
 end
@@ -166,12 +168,13 @@ local function createNewPlayerStatistics(unitId)
         for i = 1, #KOS.defaultStatistics do
             local s = PlayerStatistic:new();
             s.name = KOS.defaultStatistics[i][2];
-            
-            if (KOS.defaultStatistics[i][3]) then
-                local temp = GetComparisonStatistic(KOS.defaultStatistics[i][1]);
-                s.value = addCoinText(temp);
+
+            local statistics = GetComparisonStatistic(KOS.defaultStatistics[i][1]);
+
+            if (KOS.defaultStatistics[i][3]) then    
+                s.value = addCoinText(statistics);
             else
-                s.value = GetComparisonStatistic(KOS.defaultStatistics[i][1]);
+                s.value = statistics;
             end
             
             table.insert(player.stats, s);
@@ -227,7 +230,6 @@ local function OnEvent(self, event, arg1, arg2, ...)
 end
 
 
-
 local function OnUpdate(self, elapsed)
     total = total + elapsed;
 
@@ -235,7 +237,7 @@ local function OnUpdate(self, elapsed)
         if updating == false and #unitsToCheck >= currentUnitChecked then
         
         if debugMode then
-            print(unitsToCheck[currentUnitChecked] .. " unitsToCheck[]");
+            print("units to check: " .. unitsToCheck[currentUnitChecked]);
             print(UnitName(unitsToCheck[currentUnitChecked]));
             print(updating);
         end
