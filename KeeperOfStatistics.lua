@@ -44,15 +44,17 @@ local function getAllStatistics()
              local IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText
              IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText = GetAchievementInfo(CategoryId, i)
              
-             local isGold = false;
-             
-             if string.match(Name, "gold") or string.match(Name, "Gold") then
-                isGold = true;
-             end
-             
-             table.insert(data, { IDNumber, Name, isGold });
-             
-             count = count + 1
+             if Name ~= nil then
+                local isGold = false;
+                
+                if string.match(Name, "gold") or string.match(Name, "Gold") then
+                    isGold = true;
+                end
+                
+                table.insert(data, { IDNumber, Name, isGold });
+                
+                count = count + 1
+            end
           end
        end
     end
@@ -65,10 +67,20 @@ local function getAllStatistics()
  end
 
 local function initStore() 
+    if debugMode then
+        print("initializing store");
+    end
+
     if KOS == nil then
-        KOS = {};
-        KOS.defaultStatistics = getAllStatistics();
+        KOS = {};        
+    end
+
+    if KOS.Players == nil then
         KOS.Players = {};
+    end
+
+    if KOS.defaultStatistics == nil then
+        KOS.defaultStatistics = getAllStatistics();
     end
 end
 
@@ -77,7 +89,6 @@ local EVENT_INSPECT_ACHIEVEMENT_READY, EVENT_ADDON_LOADED, EVENT_CHAT_MSG, OUTPU
 if debugMode then 
     EVENT_CHAT_MSG = "CHAT_MSG_SAY";
     OUTPUT_CHAT_CHANNEL = "SAY";
-
     initStore();
 end
 
