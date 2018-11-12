@@ -338,9 +338,3 @@ frame:SetScript("OnEvent", OnEvent);
 frame:RegisterEvent(EVENT_INSPECT_ACHIEVEMENT_READY);
 frame:RegisterEvent(EVENT_ADDON_LOADED);
 frame:RegisterEvent(EVENT_CHAT_MSG);
-
---if you want to add more statistics to track, 
--- /script print(GetMouseFocus().id)
--- open statistcs tab, hover over a stat and enter that
--- save the ID and the name in the KOS.defaultStatistics
--- if it contains currency add true else false. 
