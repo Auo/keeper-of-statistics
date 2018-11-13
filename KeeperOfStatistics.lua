@@ -225,12 +225,11 @@ local function OnEvent(self, event, arg1, arg2, ...)
                     if p ~=nil and strlen(p) > 2 then
                         ui = getPlayerIndex(p);
                     end
-
-                    local us = math.random(1, #KOS.Players[ui].stats);
                 
                     if ui == -1 then
                         SendChatMessage("Sorry no player found with name: " .. p, OUTPUT_CHAT_CHANNEL);
                     else
+                        local us = math.random(1, #KOS.Players[ui].stats);
                         SendChatMessage(KOS.Players[ui].name .. " " .. KOS.Players[ui].stats[us].name .." : ".. KOS.Players[ui].stats[us].value, OUTPUT_CHAT_CHANNEL);
                     end
                 else
@@ -239,7 +238,6 @@ local function OnEvent(self, event, arg1, arg2, ...)
             end
     end
 end
-
 
 local function OnUpdate(self, elapsed)
     total = total + elapsed;
