@@ -149,7 +149,7 @@ end
 
 local function getPlayerIndex(name)
     for i = 1, #KOS.Players do
-        if (KOS.Players[i].name == name) then
+        if (KOS.Players[i].name:lower() == name:lower()) then
             return i;
         end
     end
@@ -158,20 +158,22 @@ local function getPlayerIndex(name)
 end
 
 local function createNewPlayerStatistics(unitId)
+    -- name - realm or name
+    local name = GetUnitName(unitId, true);
+
     if debugMode then
-        print("gathering information from player " .. GetUnitName(unitId));
+        print("gathering information from player " .. name);
     end
-    
-    local name = GetUnitName(unitId);
-    
+
     if CheckInteractDistance(unitId, 4) then
         updating = true;
         if debugMode then
-            print(GetUnitName(unitId) .. " is in range of indexing and running now!");
+            print(name .. " is in range of indexing and running now!");
         end
-                
-        if (getPlayerIndex(name) ~= -1) then
-            table.remove(KOS.Players, getPlayerIndex(name));
+    
+        local ix = getPlayerIndex(name);
+        if (ix ~= -1) then
+            table.remove(KOS.Players, ix);
         end
 
         local player = Player:new(name);
@@ -194,14 +196,13 @@ local function createNewPlayerStatistics(unitId)
     else
         if debugMode then
             --out of range for indexing
-            print(GetUnitName(unitId) .. " was not in range");
+            print(name .. " was not in range");
         end
     end
     --tell that we are ready for the next unitId
     updating = false;
     --update the current player, move to next unit
     currentUnitChecked = currentUnitChecked + 1;
-    --ClearAchievementComparisonUnit();
 end
 
 local function OnEvent(self, event, arg1, arg2, ...)
@@ -220,10 +221,12 @@ local function OnEvent(self, event, arg1, arg2, ...)
                 p = firstToUpper(p);
             
                 if #KOS.Players > 0 then
-                    local ui = math.random(1, #KOS.Players);
+                    local ui = -1; 
 
                     if p ~=nil and strlen(p) > 2 then
                         ui = getPlayerIndex(p);
+                    else
+                        ui = math.random(1, #KOS.Players);
                     end
                 
                     if ui == -1 then
@@ -245,45 +248,47 @@ local function OnUpdate(self, elapsed)
     if total > 1.5 then
         if updating == false and #unitsToCheck >= currentUnitChecked then
         
-        if debugMode then
-            print("units to check: " .. unitsToCheck[currentUnitChecked]);
-            print(UnitName(unitsToCheck[currentUnitChecked]));
-            print(updating);
-        end
-        
-        ClearAchievementComparisonUnit();
+            local unit = unitsToCheck[currentUnitChecked];
+            local name, realm = UnitName(unit);
+            if debugMode then
+                print("units to check: " .. unit);
+                print(name);
+                print(updating);
+            end
+            
+            ClearAchievementComparisonUnit();
             --check range
-        if CheckInteractDistance(unitsToCheck[currentUnitChecked], 4) then
-            
-            --debug
-            if debugMode then
-                print("inside, setting up for event");
-            end
+            if CheckInteractDistance(unit, 4) then
+                
+                --debug
+                if debugMode then
+                    print("inside, setting up for event");
+                end
 
-            local success = SetAchievementComparisonUnit(unitsToCheck[currentUnitChecked]);
-            
-        else
-            --debug
-            if debugMode then
-                print("The player " .. UnitName(unitsToCheck[currentUnitChecked])  .. " was too far away");
-            end
+                local success = SetAchievementComparisonUnit(unit);
+                
+            else
+                --debug
+                if debugMode then
+                    print("The player " .. name  .. "-" .. realm .." was too far away");
+                end
 
-            currentUnitChecked = currentUnitChecked + 1;
+                currentUnitChecked = currentUnitChecked + 1;
+                end
             end
-        end
         
-        if #unitsToCheck < currentUnitChecked and updating == false then
-            frame:SetScript("OnUpdate", nil);
-            if AchievementFrameComparison ~= nil then
-                AchievementFrameComparison:RegisterEvent(EVENT_INSPECT_ACHIEVEMENT_READY);
+            if #unitsToCheck < currentUnitChecked and updating == false then
+                frame:SetScript("OnUpdate", nil);
+                if AchievementFrameComparison ~= nil then
+                    AchievementFrameComparison:RegisterEvent(EVENT_INSPECT_ACHIEVEMENT_READY);
+                end
+                
+                runningCheck = false;
+                unitsToCheck = {};
+                currentUnitChecked = 1;
+                print("indexing done for your group/raid");
             end
-            
-            runningCheck = false;
-            unitsToCheck = {};
-            currentUnitChecked = 1;
-            print("indexing done for your group/raid");
-        end
-        total = 0;
+            total = 0;
     end
 end
 
