@@ -34,12 +34,10 @@ local function getAllStatistics()
     };
     
     local data = {};
-    local count = 0
     for _, CategoryId in pairs(GetStatisticsCategoryList()) do
        local Title, ParentCategoryId = GetCategoryInfo(CategoryId)
        
-       if  contains(unAllowedCategories, Title) == false then
-          --print(Title);
+       if contains(unAllowedCategories, Title) == false then
           for i = 1, GetCategoryNumAchievements(CategoryId) do
              local IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText
              IDNumber, Name, Points, Completed, Month, Day, Year, Description, Flags, Image, RewardText = GetAchievementInfo(CategoryId, i)
@@ -52,8 +50,6 @@ local function getAllStatistics()
                 end
                 
                 table.insert(data, { IDNumber, Name, isGold });
-                
-                count = count + 1
             end
           end
        end
@@ -103,8 +99,8 @@ function string.startsWith(str, subString)
    return string.sub(str, 1, string.len(subString)) == subString
 end
 
-function firstToUpper(str)
-   return (str:gsub("^%l", string.upper))
+function string.firstToUpper(str)
+   return str:gsub("^%l", string.upper)
 end
 
 Player = {};
@@ -128,7 +124,7 @@ end
 local function addCoinText(text)
     text = string.gsub(text, "(%b||)(t)", "")
 
-    local coins = {" c"," s"," g"};
+    local coins = { " c", " s", " g" };
     local s = strrev(text);
     
     local output = " ";
@@ -216,29 +212,30 @@ local function OnEvent(self, event, arg1, arg2, ...)
     elseif event == EVENT_ADDON_LOADED then
         initStore();
     elseif event == EVENT_CHAT_MSG then
-            if string.startsWith(arg1, "!stats") then
-                local p = strtrim(string.sub(arg1, strlen("!stats") + 1));
-                p = firstToUpper(p);
-            
-                if #KOS.Players > 0 then
-                    local ui = -1; 
+        local stats = "!stats";
+        if string.startsWith(arg1, stats) then
+            local p = strtrim(string.sub(arg1, strlen(stats) + 1));
+            p = string.firstToUpper(p);
+        
+            if #KOS.Players > 0 then
+                local ui = -1; 
 
-                    if p ~=nil and strlen(p) > 2 then
-                        ui = getPlayerIndex(p);
-                    else
-                        ui = math.random(1, #KOS.Players);
-                    end
-                
-                    if ui == -1 then
-                        SendChatMessage("Sorry no player found with name: " .. p, OUTPUT_CHAT_CHANNEL);
-                    else
-                        local us = math.random(1, #KOS.Players[ui].stats);
-                        SendChatMessage(KOS.Players[ui].name .. " " .. KOS.Players[ui].stats[us].name .." : ".. KOS.Players[ui].stats[us].value, OUTPUT_CHAT_CHANNEL);
-                    end
+                if p ~=nil and strlen(p) > 2 then
+                    ui = getPlayerIndex(p);
                 else
-                    SendChatMessage("Sorry, no players have been indexed", OUTPUT_CHAT_CHANNEL);
+                    ui = math.random(1, #KOS.Players);
                 end
+            
+                if ui == -1 then
+                    SendChatMessage("Sorry no player found with name: " .. p, OUTPUT_CHAT_CHANNEL);
+                else
+                    local us = math.random(1, #KOS.Players[ui].stats);
+                    SendChatMessage(KOS.Players[ui].name .. " " .. KOS.Players[ui].stats[us].name .. " : " .. KOS.Players[ui].stats[us].value, OUTPUT_CHAT_CHANNEL);
+                end
+            else
+                SendChatMessage("Sorry, no players have been indexed", OUTPUT_CHAT_CHANNEL);
             end
+        end
     end
 end
 
