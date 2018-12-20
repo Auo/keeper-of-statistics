@@ -1,8 +1,8 @@
-## Interface: 80000
+## Interface: 80100
 ## Title: Keeper of Statistics
 ## Author: Shinri, Vashj EU
 ## Notes: Gathering statistics for other players to show in guildchat
 ## SavedVariables: KOS
-## Version: 2.0.1
+## Version: 2.0.2
 
 KeeperOfStatistics.lua
