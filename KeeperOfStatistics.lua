@@ -82,11 +82,7 @@ end
 
 local EVENT_INSPECT_ACHIEVEMENT_READY, EVENT_ADDON_LOADED, EVENT_CHAT_MSG, OUTPUT_CHAT_CHANNEL = "INSPECT_ACHIEVEMENT_READY", "ADDON_LOADED", "CHAT_MSG_GUILD", "GUILD";
 
-if debugMode then 
-    EVENT_CHAT_MSG = "CHAT_MSG_SAY";
-    OUTPUT_CHAT_CHANNEL = "SAY";
-    initStore();
-end
+
 
 
 local unitsToCheck = {};
@@ -143,14 +139,45 @@ local function addCoinText(text)
     return strrev(output);
 end
 
-local function getPlayerIndex(name)
+local function getPlayerIndex(name, exact)
     for i = 1, #KOS.Players do
-        if (KOS.Players[i].name:lower() == name:lower()) then
-            return i;
+        if exact then
+            if (KOS.Players[i].name:lower() == name:lower()) then
+                return i;
+            end
+        else
+            if (string.startsWith(KOS.Players[i].name:lower(), name:lower() .. "-")) then
+                return i;
+            end
         end
     end
     
     return -1;
+end
+-- used to create debug data
+local function createFakePlayerStatistics(name)
+    local ix = getPlayerIndex(name, true);
+    if (ix ~= -1) then
+        table.remove(KOS.Players, ix);
+    end
+    local player = Player:new(name);
+    local s = PlayerStatistic:new();
+    s.name = KOS.defaultStatistics[1][2];
+    s.value = "FAKE_DATA";
+    
+    table.insert(player.stats, s);
+    table.insert(KOS.Players, player);
+end
+
+if debugMode then 
+    EVENT_CHAT_MSG = "CHAT_MSG_SAY";
+    OUTPUT_CHAT_CHANNEL = "SAY";
+    initStore();
+
+    -- uncomment these lines if you want to populate debug data, obviously bogus
+    --createFakePlayerStatistics("Player-Server");
+    --createFakePlayerStatistics("Anotherplayer");
+    --createFakePlayerStatistics("Anotherplayer-Server");
 end
 
 local function createNewPlayerStatistics(unitId)
@@ -167,7 +194,7 @@ local function createNewPlayerStatistics(unitId)
             print(name .. " is in range of indexing and running now!");
         end
     
-        local ix = getPlayerIndex(name);
+        local ix = getPlayerIndex(name, true);
         if (ix ~= -1) then
             table.remove(KOS.Players, ix);
         end
@@ -211,17 +238,27 @@ local function OnEvent(self, event, arg1, arg2, ...)
         createNewPlayerStatistics(unitsToCheck[currentUnitChecked]);
     elseif event == EVENT_ADDON_LOADED then
         initStore();
+
+        
+
     elseif event == EVENT_CHAT_MSG then
         local stats = "!stats";
         if string.startsWith(arg1, stats) then
             local p = strtrim(string.sub(arg1, strlen(stats) + 1));
             p = string.firstToUpper(p);
-        
+            if debugMode then
+                print("looking for player: " .. p);
+            end
+
             if #KOS.Players > 0 then
                 local ui = -1; 
 
                 if p ~=nil and strlen(p) > 2 then
-                    ui = getPlayerIndex(p);
+                    ui = getPlayerIndex(p, true);
+
+                    if ui == -1 then
+                        ui = getPlayerIndex(p, false)
+                    end
                 else
                     ui = math.random(1, #KOS.Players);
                 end
